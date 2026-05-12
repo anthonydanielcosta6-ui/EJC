@@ -105,7 +105,6 @@
       margin-top:40px;
       font-size:18px;
     }
-
   </style>
 </head>
 <body>
@@ -126,48 +125,42 @@
 
 <script>
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzHhTVvSTOMfdxRltvcOyHoaA6t8g2oQqHvBDcND8jlz30D9ewaFns5zE3--FNB1GUb/exec";
+// URL DO GOOGLE APPS SCRIPT
+const API_URL = "https://script.google.com/macros/s/AKfycbzbeIL6lrMcozU2r1nINC3TYiH2ycKMUug7E7dypzgd5KEEOGcJktRiv24MYr3SP4O2/exec";
 
 let dados = [];
 
-async function carregarDados(){
+// JSONP PARA EVITAR CORS
+function carregarDados(){
 
-  try{
+  const script = document.createElement("script");
 
-    const resposta = await fetch(API_URL,{
-      method:"GET",
-      mode:"cors"
-    });
+  script.src = API_URL + "?callback=receberDados";
 
-    if(!resposta.ok){
-      throw new Error("Erro na API");
-    }
+  script.onerror = function(){
+    document.getElementById("loading").innerHTML = "Erro ao carregar dados.";
+  };
 
-    const json = await resposta.json();
-
-    dados = json;
-
-    criarCategorias();
-
-    renderizar();
-
-    document
-      .getElementById("loading")
-      .style.display = "none";
-
-  }catch(e){
-
-    document
-      .getElementById("loading")
-      .innerHTML =
-      "Erro ao carregar dados.";
-
-    console.error(e);
-  }
+  document.body.appendChild(script);
 }
+
+// FUNÇÃO CHAMADA PELO GOOGLE APPS SCRIPT
+function receberDados(json){
+
+  dados = json;
+
+  criarCategorias();
+  renderizar();
+
+  document.getElementById("loading").style.display = "none";
+}
+
 function criarCategorias(){
 
   const select = document.getElementById("filtroCategoria");
+
+  // evita categorias duplicadas ao recarregar
+  select.innerHTML = '<option value="">Todas as Categorias</option>';
 
   const categorias = [...new Set(
     dados.map(item => item.categoria)
@@ -197,7 +190,7 @@ function corCategoria(nome){
     branco:"#f3f4f6"
   };
 
-  return cores[nome.toLowerCase()] || "#6b7280";
+  return cores[(nome || "").toLowerCase()] || "#6b7280";
 }
 
 function renderizar(){
@@ -231,6 +224,7 @@ function renderizar(){
         <img
           class="media"
           src="${item.arquivo}"
+          alt="Imagem"
         />
       `;
     }
@@ -256,14 +250,14 @@ function renderizar(){
           class="categoria"
           style="
             background:${corCategoria(item.categoria)};
-            color:${item.categoria.toLowerCase() === 'branco' ? '#000' : '#fff'};
+            color:${(item.categoria || '').toLowerCase() === 'branco' ? '#000' : '#fff'};
           "
         >
-          ${item.categoria}
+          ${item.categoria || 'Sem categoria'}
         </div>
 
         <div class="frase">
-          ${item.frase}
+          ${item.frase || ''}
         </div>
 
         <a
