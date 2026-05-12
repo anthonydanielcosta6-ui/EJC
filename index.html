@@ -126,7 +126,7 @@
 
 <script>
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwQGV24QWOMStc9Tu4pxmBiBF-1OZA__SZ0umntbYn5Aj1lNeJWSFv-Gk2wvaALwDsm/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzHhTVvSTOMfdxRltvcOyHoaA6t8g2oQqHvBDcND8jlz30D9ewaFns5zE3--FNB1GUb/exec";
 
 let dados = [];
 
@@ -134,25 +134,37 @@ async function carregarDados(){
 
   try{
 
-    const resposta = await fetch(API_URL);
+    const resposta = await fetch(API_URL,{
+      method:"GET",
+      mode:"cors"
+    });
+
+    if(!resposta.ok){
+      throw new Error("Erro na API");
+    }
+
     const json = await resposta.json();
 
     dados = json;
 
     criarCategorias();
+
     renderizar();
 
-    document.getElementById("loading").style.display = "none";
+    document
+      .getElementById("loading")
+      .style.display = "none";
 
   }catch(e){
 
-    document.getElementById("loading").innerHTML =
+    document
+      .getElementById("loading")
+      .innerHTML =
       "Erro ao carregar dados.";
 
     console.error(e);
   }
 }
-
 function criarCategorias(){
 
   const select = document.getElementById("filtroCategoria");
