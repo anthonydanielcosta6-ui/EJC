@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Galeria de Downloads</title>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body{
+      background:#111827;
+      color:white;
+      padding:30px;
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:25px;
+    }
+
+    .topo{
+      display:flex;
+      gap:10px;
+      margin-bottom:25px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+
+    select{
+      padding:12px;
+      border:none;
+      border-radius:10px;
+      font-size:15px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+      gap:20px;
+    }
+
+    .card{
+      border-radius:18px;
+      overflow:hidden;
+      background:#1f2937;
+      box-shadow:0 0 10px rgba(0,0,0,.3);
+      transition:.2s;
+    }
+
+    .card:hover{
+      transform:translateY(-3px);
+    }
+
+    .media{
+      width:100%;
+      height:250px;
+      object-fit:cover;
+      background:black;
+    }
+
+    video.media{
+      object-fit:contain;
+    }
+
+    .conteudo{
+      padding:15px;
+    }
+
+    .frase{
+      margin-bottom:12px;
+      line-height:1.4;
+    }
+
+    .categoria{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:13px;
+      margin-bottom:12px;
+      font-weight:bold;
+    }
+
+    .btn{
+      display:inline-block;
+      padding:10px 15px;
+      background:#2563eb;
+      color:white;
+      text-decoration:none;
+      border-radius:10px;
+      font-weight:bold;
+    }
+
+    .btn:hover{
+      background:#1d4ed8;
+    }
+
+    .loading{
+      text-align:center;
+      margin-top:40px;
+      font-size:18px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <h1>Galeria de Downloads</h1>
+
+  <div class="topo">
+    <select id="filtroCategoria">
+      <option value="">Todas as Categorias</option>
+    </select>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="loading" id="loading">
+    Carregando...
+  </div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycbwQGV24QWOMStc9Tu4pxmBiBF-1OZA__SZ0umntbYn5Aj1lNeJWSFv-Gk2wvaALwDsm/exec";
+
+let dados = [];
+
+async function carregarDados(){
+
+  try{
+
+    const resposta = await fetch(API_URL);
+    const json = await resposta.json();
+
+    dados = json;
+
+    criarCategorias();
+    renderizar();
+
+    document.getElementById("loading").style.display = "none";
+
+  }catch(e){
+
+    document.getElementById("loading").innerHTML =
+      "Erro ao carregar dados.";
+
+    console.error(e);
+  }
+}
+
+function criarCategorias(){
+
+  const select = document.getElementById("filtroCategoria");
+
+  const categorias = [...new Set(
+    dados.map(item => item.categoria)
+  )];
+
+  categorias.forEach(cat => {
+
+    const option = document.createElement("option");
+
+    option.value = cat;
+    option.textContent = cat;
+
+    select.appendChild(option);
+  });
+}
+
+function corCategoria(nome){
+
+  const cores = {
+    vermelho:"#ef4444",
+    azul:"#3b82f6",
+    verde:"#22c55e",
+    amarelo:"#eab308",
+    roxo:"#a855f7",
+    rosa:"#ec4899",
+    preto:"#111111",
+    branco:"#f3f4f6"
+  };
+
+  return cores[nome.toLowerCase()] || "#6b7280";
+}
+
+function renderizar(){
+
+  const categoriaSelecionada =
+    document.getElementById("filtroCategoria").value;
+
+  const grid = document.getElementById("grid");
+
+  grid.innerHTML = "";
+
+  let filtrados = dados;
+
+  if(categoriaSelecionada){
+
+    filtrados = dados.filter(item =>
+      item.categoria === categoriaSelecionada
+    );
+  }
+
+  filtrados.forEach(item => {
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    let mediaHTML = "";
+
+    if(item.tipo === "imagem"){
+
+      mediaHTML = `
+        <img
+          class="media"
+          src="${item.arquivo}"
+        />
+      `;
+    }
+
+    if(item.tipo === "video"){
+
+      mediaHTML = `
+        <video
+          class="media"
+          controls
+        >
+          <source src="${item.arquivo}">
+        </video>
+      `;
+    }
+
+    card.innerHTML = `
+      ${mediaHTML}
+
+      <div class="conteudo">
+
+        <div
+          class="categoria"
+          style="
+            background:${corCategoria(item.categoria)};
+            color:${item.categoria.toLowerCase() === 'branco' ? '#000' : '#fff'};
+          "
+        >
+          ${item.categoria}
+        </div>
+
+        <div class="frase">
+          ${item.frase}
+        </div>
+
+        <a
+          class="btn"
+          href="${item.arquivo}"
+          download
+          target="_blank"
+        >
+          Baixar
+        </a>
+
+      </div>
+    `;
+
+    grid.appendChild(card);
+
+  });
+}
+
+document
+  .getElementById("filtroCategoria")
+  .addEventListener("change", renderizar);
+
+carregarDados();
+
+</script>
+
+</body>
+</html>
